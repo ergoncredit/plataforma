@@ -1,0 +1,1353 @@
+
+<!-- saved from url=(0081)https://backoffice.ergoncredit.com.br/invoice/views/list-invoice.client.view.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script src="chrome-extension://ddbjnfjiigjmcpcpkmhogomapikjbjdk/base.js"></script></head><body><div data-ng-controller="InvoiceController" data-ng-init="startTemplate()">
+	<div data-ng-show="!authentication.user">
+		<div ng-include="&#39;includes/howdareyou.html&#39;"></div>
+	</div>
+	<div data-ng-show="authentication.user">
+		<header id="topnav" class="navbar navbar-fixed-top navbar-bluegray" ng-include="&#39;includes/nova-mesa/header.html&#39;"></header>
+		
+		<div id="wrapper">
+			<div id="layout-static">
+				<div ng-include="&#39;includes/nova-mesa/sidebar.html&#39;" class="static-sidebar-wrapper sidebar-bluegray"></div>
+				<div class="static-content-wrapper">
+					<div class="static-content">
+						<div class="page-content">
+							<!-- Breadcrumb -->
+							<ol class="breadcrumb-nm">
+								<li class="active"><a href="https://backoffice.ergoncredit.com.br/#!/">Home</a></li>
+								<li class="active"><a href="https://backoffice.ergoncredit.com.br/#!/creditanalysis">Análise de Crédito</a></li>
+								<li class="active"><a href="https://backoffice.ergoncredit.com.br/#!/invoice_bycompany">Mesa de Notas</a></li>
+								<li>Faturas Pedro</li>
+							</ol>
+					<div class="page-heading" data-ng-show="clearanceLevel()&lt;=100 &amp;&amp; (authentication.user.realm == undefined || authentication.user.realm == &#39;Ergoncredit&#39;)">
+								<h1>Faturas</h1>
+                  <div class="btn-group pull-right">
+					<form name="myForm">
+                    	<button class="btn btn-primary" type="file" ngf-select="" ng-model="invoiceCSVFile" name="file" accept=".csv" ngf-max-size="2MB" required="" ngf-model-invalid="errorFile">Importar fatura (CSV)</button>
+                    	<button class="btn btn-default" ng-click="uploadCSV(invoiceCSVFile)">Importar</button>
+                    	<i ng-show="myForm.file.$error.maxSize">Arquivo muito grande {{errorFile.size / 1000000|number:1}}MB: max 2M</i>
+                  	
+
+						<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+							Ações
+							<i class="fa fa-angle-down"></i>
+						</button>
+						<ul class="dropdown-menu" role="menu">
+							<li><a href="https://backoffice.ergoncredit.com.br/#!/csvimporthistory">Importações já Realizadas</a></li>
+							<li><a name="FaturasExpiradas" id="FaturasExpiradas" value="FaturasExpiradas" data-ng-click="generateExpiredInvoiceCSV()">Gerar Faturas Expiradas</a></li>
+							<li><a href="https://backoffice.ergoncredit.com.br/#!/csvexpiredinvoices" name="FaturasExpiradas" id="VerFaturasExpiradas" value="FaturasExpiradas">Ver Faturas Expiradas</a></li>
+							<li><a href="https://backoffice.ergoncredit.com.br/#!/invoice_bycompany">Ver Faturas Agrupadas por Empresa</a></li>
+							<li><a href="https://backoffice.ergoncredit.com.br/#!/invoices/duedate">Gerenciar Notas Sem Vencimento</a></li>
+						</ul>
+					</form>
+                  </div>
+              </div>
+             	<div class="page-body">
+								<!-- Buscar Notas -->
+								<div class="row">
+									<div class="col-md-12">
+										<div class="panel panel-collapsed" data-widget="{&quot;collapsed&quot;: &quot;true&quot;}">
+											<div class="panel-heading">
+												<h2>Buscar Notas</h2>
+												<div class="panel-ctrls" data-actions-container="" data-action-collapse="{&quot;target&quot;: &quot;.panel-body&quot;}" data-ng-init="searchInvoice = false;">
+												</div>
+											</div>
+											<div class="panel-body">
+												<div class="row">
+													<div class="col-md-12">
+														<h4>
+															Para realizar a pesquisa busque por qualquer um dos campos abaixo (ou por mais de um):
+														</h4>
+														<div class="row">
+															<div class="col-md-3">
+																<div class="form-group">
+																	<label for="numeroInvoice" class="control-label">Número da Nota</label>
+																	<input class="form-control" type="text" id="numeroInvoice" ng-model="numeroInvoice">
+																</div>
+															</div>
+															<div class="col-md-3">
+																<div class="form-group">
+																	<label for="sacadoCnpj" class="control-label">CNPJ (sacado)</label>
+																	<input class="form-control" type="text" id="sacadoCnpj" ng-model="sacadoCnpj">
+																</div>
+															</div>
+															<div class="col-md-3">
+																<div class="form-group">
+																	<label for="cedenteCnpj" class="control-label">CNPJ (cedente)</label>
+																	<input class="form-control" type="text" id="cedenteCnpj" ng-model="cedenteCnpj">
+																</div>
+															</div>
+														</div>
+														<div class="row">
+															<div class="col-md-3">
+																<div class="form-group">
+																	<label for="dataCadastro" class="control-label">Data do cadastro</label>
+																	<input class="form-control" type="date" id="dataCadastro" ng-model="dataCadastro">
+																</div>
+															</div>
+															<div class="col-md-3">
+																<div class="form-group">
+																	<label for="dataVencimento" class="control-label">Data do vencimento</label>
+																	<input class="form-control" type="date" id="dataVencimento" ng-model="dataVencimento">
+																</div>
+															</div>
+															<div class="col-md-3">
+																<div class="form-group">
+																	<label for="valorInvoice" class="control-label">Valor</label>
+																	<input class="form-control" type="number" id="valorInvoice" ng-model="valorInvoice">
+																</div>
+															</div>
+														</div>
+														<div class="row">
+															<div class="col-md-3">
+																<div class="form-group">
+																	<label for="chaveNfe" class="control-label">Chave NFe</label>
+																	<input class="form-control" type="text" id="chaveNfe" ng-model="chaveNfe">
+																</div>
+															</div>
+															<div class="col-md-3">
+																<div class="form-group">
+																	<label for="dataVencimento" class="control-label">Status</label>
+																	<input class="form-control" list="statusInvoices" name="statusInvoice" id="statusInvoice" ng-model="statusInvoice">
+																	<datalist id="statusInvoices">
+																		<option value="Sem Vencimento"></option>
+																		<option value="Cadastrada"></option>
+																		<option value="Em Processamento"></option>
+																		<option value="Suspensa"></option>
+																		<option value="Elegivel"></option>
+																		<option value="Não Elegivel"></option>
+																		<option value="Cancelada"></option>
+																		<option value="Antecipação Pedida"></option>
+																		<option value="Antecipação em Processamento"></option>
+																		<option value="Antecipada"></option>
+																		<option value="Não Antecipada"></option>
+																		<option value="Paga pelo Sacado"></option>
+																		<option value="Paga em Atraso"></option>
+																		<option value="Atrasada"></option>
+																	</datalist>
+																</div>
+															</div>
+															<div class="col-md-3">
+																<div class="form-group">
+																	<label for="tipoInvoice" class="control-label">Tipo (NFe, NFs, CTe, etc)</label>
+																	<input class="form-control" list="tipoInvoices" name="tipoInvoice" id="tipoInvoice" ng-model="tipoInvoice">
+																	<datalist id="tipoInvoices">
+																		<option value="NFe"></option>
+																		<option value="NFs"></option>
+																		<option value="CTe"></option>
+																		<option value="Cheque"></option>
+																		<option value="Título de Pagamento Cnab"></option>
+                                    									<option value="Titulo de Cobranca Cnab"></option>
+																		<option value="Nota Comercial"></option>
+																	</datalist>
+																</div>
+															</div>
+														</div>
+														<div class="row">
+															<div class="col-md-3">
+																<div class="form-group">
+																	<label for="valorInvoice" class="control-label">Id</label>
+																	<input class="form-control" type="text" id="idInvoice" ng-model="idInvoice">
+																</div>
+															</div>
+															<div class="col-md-3">
+																<div class="form-group">
+																	<label for="valorInvoice" class="control-label">Número do documento de cobrança</label>
+																	<input class="form-control" type="number" id="numeroDocCobranca" ng-model="numeroDocCobranca">
+																</div>
+															</div>
+															<div class="col-md-3">
+																<div class="form-group">
+																	<label for="beneficiarioCnpj" class="control-label">CNPJ (beneficiario)</label>
+																	<input class="form-control" type="text" id="beneficiarioCnpj" ng-model="beneficiarioCnpj">
+																</div>
+															</div>
+														</div>
+                            <div>
+                              <label>Fazer uma pesquisa que atendem a mais de um campo selecionado?</label>
+                              <button class="btn-grid-action ico-check" data-toggle="modal" href="#explicar" title="Como funciona?"></button> 
+                            <br>
+                              <input type="radio" ng-model="buscaToggle" name="buscaToggle" ng-value="true" style="margin-top: 0px;">&nbsp;Sim
+                              &nbsp;&nbsp;&nbsp;
+                              <input type="radio" ng-model="buscaToggle" name="buscaToggle" ng-value="false" style="margin-top: 0px;">&nbsp;Não
+                            </div>
+
+                            <!-- Definir Taxa Light box-->
+                            <div class="modal fade" id="explicar" tabindex="-1" role="dialog" aria-labelledby="explicar" aria-hidden="true">
+                              <div class="modal-dialog">
+                                <div class="modal-content">
+                                  <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                                    <h1 class="modal-title">Como funciona a busca com mais de um parâmetro</h1>
+                                  </div>
+                                  <div class="modal-body">
+                                    <div class="row">
+                                      <h5>Marcando
+                                        <input type="radio" ng-checked="true" style="margin-top: 0px;"> Sim</h5>
+                                      <h4>Quero buscar por notas que atendam <b>todos</b> os criterios da pesquisa</h4>
+                                    </div>  
+                                    <div class="row">
+                                      <h5>Marcando
+                                        <input type="radio" ng-checked="true" style="margin-top: 0px;"> Não</h5>
+                                      <h4>Quero buscar por notas que atendam a <b>pelo menos 1</b> dos campos da pesquisa</h4>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                          <br>
+														<div class="row mb-3">
+															<div class="col-md-12">
+																<div data-ng-show="unlockSearchButtonInvoices(numeroInvoice, cedenteCnpj, sacadoCnpj, dataCadastro, dataVencimento, valorInvoice, chaveNfe, statusInvoice, tipoInvoice, idInvoice, numeroDocCobranca, beneficiarioCnpj)">
+																	<button disabled="" class="btn btn-primary" data-ng-click="searchInvoices(numeroInvoice, cedenteCnpj, sacadoCnpj, dataCadastro, dataVencimento, valorInvoice, chaveNfe, statusInvoice, tipoInvoice, true, idInvoice, numeroDocCobranca, beneficiarioCnpj)"> Buscar </button>
+																</div>
+																<div data-ng-show="!unlockSearchButtonInvoices(numeroInvoice, cedenteCnpj, sacadoCnpj, dataCadastro, dataVencimento, valorInvoice, chaveNfe, statusInvoice, tipoInvoice, idInvoice, numeroDocCobranca, beneficiarioCnpj)">
+																	<button class="btn btn-primary" data-ng-click="searchInvoices(numeroInvoice, cedenteCnpj, sacadoCnpj, dataCadastro, dataVencimento, valorInvoice, chaveNfe, statusInvoice, tipoInvoice, true, idInvoice, numeroDocCobranca, beneficiarioCnpj)"> Buscar </button>
+																</div>
+																<div style="position:relative; margin-left:120px; margin-top:4px;">
+																	<div data-ng-show="loadingSearchInvoices" class="loaderSpinner"></div>
+																</div>
+															</div>
+														</div>
+														<div class="row">
+															<div class="col-md-12">
+																<table class="table table-striped table-hover">
+																	<thead>
+																		<!--th data-ng-if="clearanceLevel()<=100">Atualizar Status?
+																			<div class="group-button">
+																				<button class="btn-grid-action ico-check" name="MakeAllElegible" id="MakeAllElegible" value="MakeAllElegible" data-ng-click='massUpdate(1)' title="Tornar Elegível"></button> 
+																				<button class="btn-grid-action ico-exclude" name="MakeAllNonElegible" id="MakeAllNonElegible" value="MakeAllNonElegible" data-ng-click='massUpdate(2)' title="Tornar Não Elegível"></button> 
+																				<button class="btn-grid-action ico-garbage" name="MakeAllCancelled" id="MakeAllCancelled" value="MakeAllCancelled" data-ng-click='massUpdate(3)' title="Cancelar"></button>  
+																			</div>
+																		</th-->
+																		<tr><th>
+																			<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;numeroDuplicata&#39;)"><b>NF /<br>No Duplicata</b></button>
+																		</th>
+																		<th>
+																			<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;sacado.razaoSocial || customer.razaoSocial&#39;)"><b>Sacado/Cliente</b></button>
+																		</th>
+																		<th>
+																			<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;fornecedor.razaoSocial || cedente.razaoSocial&#39;)"><b>Cedente/Fornecedor</b></button>
+																		</th>
+																		<th>
+																			<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;beneficiario.razaoSocial&#39;)"><b>Beneficiario</b></button>
+																		</th>
+																		<th>
+																			<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;valor&#39;)"><b>Valor</b></button>
+																		</th>
+																		<th>
+																			<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;vencimento&#39;)"><b>Vencimento</b></button>
+																		</th>
+																		<!--th>Origem</th-->
+																		<th>
+																			<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;status&#39;)"><b>Status</b></button>
+																		</th>
+																		<!--th>Usuário</th-->
+																		<th>
+																			<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;dataCadastro&#39;)"><b>Data de Cadastro</b></button>
+																		</th>
+                                    <th>
+																			<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(pagaPeloSacadoAt ? &#39;pagaPeloSacadoAt&#39; : &#39;pagaEmAtrasoAt&#39;)"><b>Data de Pagamento</b>
+																		</button></th>
+																		<th>
+																			<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy((sacado != undefined ? &#39;Op Sacado&#39; : (cedente!=undefined ? &#39;Op Cedente&#39;: &#39;&#39;)))"><b>Tipo de<br>Operação</b></button>
+																		</th>
+																		<th>
+																			<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(customer == undefined ? &#39;Sim&#39; : &#39;confirmacaoDestinatario.acao&#39;)"><b>Confirmada</b></button>
+																		</th>
+																		<th><b>Tipo de Título</b></th>
+																	</tr></thead>
+																	<!--tr data-ng-if="clearanceLevel()<=100">
+																		<td> 
+																			<center>
+																				<input type="checkbox" data-ng-click="populateToMassUpdate(0)" ng-model="master"></input>
+																			</center>
+																		</td>
+																		<td colspan="9"> Marcar/Desmarcar Todas </td>
+																	</tr-->
+																	<tbody><tr data-ng-repeat="invoice in searchResults | orderBy: propertyName">
+																		<!--td>
+																			<center>
+																				<input type="checkbox" id="checked" ng-checked="master" data-ng-click="populateToMassUpdate(invoice._id)" 
+																				data-ng-if="invoice.status != 'Suspensa'  && (invoice.fornecedor !== undefined || 
+																				(invoice.customer != undefined && invoice.customer.statusCadastro!='Negado' 
+																				&& invoice.customer.statusCadastro!='Em Analise' && invoice.customer.statusCadastro!='Cadastrado'))"></input>
+																				<span data-ng-show="invoice.customer.statusCadastro=='Negado'">Cliente Rejeitado</span>
+																				<span data-ng-show="invoice.customer.statusCadastro=='Em Analise'">Análise de Cliente Pendente</span>
+																				<span data-ng-show="invoice.customer.statusCadastro=='Cadastrado'">Análise de Cliente Não Iniciada</span>
+																				<span data-ng-show="invoice.status=='Suspensa'">Suspensa pelo Usuário</span>
+																			</center>
+																		</td-->
+																		<td><a data-ng-href="#!/invoice/{{invoice._id}}">{{invoice.numero}}{{ invoice.numeroDuplicata ? ' / ' + invoice.numeroDuplicata : '' }} </a></td>
+																		<td><a data-ng-href="#!/invoice/{{invoice._id}}">{{invoice.sacado.razaoSocial || invoice.customer.razaoSocial}} - <br> (CNPJ: {{invoice.sacado.cnpj || invoice.customer.cnpj}})</a></td>
+																		<td>&nbsp;{{invoice.fornecedor.razaoSocial || invoice.cedente.razaoSocial}} - <br> (CNPJ: {{invoice.fornecedor.cnpj || invoice.cedente.cnpj}})&nbsp;&nbsp;</td>
+																		<td>&nbsp;{{invoice.beneficiario.razaoSocial}} - <br> (CNPJ: {{invoice.beneficiario.cnpj}})&nbsp;&nbsp;</td>
+																		<td>{{invoice.valor | currency }} </td>
+																		<td>{{invoice.vencimento | date:'longDate':'UTC' }} </td>
+																		<!--td>{{invoice.origem }} </td-->
+																		<td>{{invoice.status }} </td>
+																		<!--td>{{invoice.sacado.user.email }} </td-->
+																		<td>{{invoice.dataCadastro | date:'longDate': 'UTC' }} </td>
+																		<td>{{invoice.pagaPeloSacadoAt || invoice.pagaEmAtrasoAt  | date:'longDate':'UTC' }} &nbsp;</td>
+																		<td>{{ (invoice.sacado != undefined ? 'Op Sacado' : (invoice.cedente!=undefined ? 'Op Cedente': ''))}}</td>
+																		<td>{{invoice.customer == undefined ? 'Sim' : invoice.confirmacaoDestinatario.acao}}</td>
+																		<td>{{ pegaTipoTitulo(invoice) }}</td>
+													
+																	</tr>
+																	<tr>
+																		<td data-ng-show="authentication.user.realm == undefined || authentication.user.realm == &#39;Ergoncredit&#39;" colspan="3"><b>Total</b></td>
+																		<td data-ng-show="authentication.user.realm != undefined &amp;&amp; authentication.user.realm != &#39;Ergoncredit&#39;" colspan="3"><b>Total</b></td>
+																		<td><b>{{ total('Busca') | currency: 'R$': 2 }}</b></td>
+																		<td colspan="5"></td>
+																	</tr>
+																	<tr>
+																		<td align="center" colspan="11">
+																			<button class="btn btn-primary" data-ng-click="consumeNextPageSearchInvoices(numeroInvoice, cedenteCnpj, sacadoCnpj, dataCadastro, dataVencimento, valorInvoice, chaveNfe, statusInvoice, tipoInvoice)" data-ng-show="searchResults.length &gt; 0 &amp;&amp; ((searchResults.length % 1000)==0)  ">
+																				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Carregar Mais...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+																			</button>
+																		</td>
+																	</tr>
+																</tbody></table>
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
+										</div> <!-- panel-collapsed -->
+									</div>
+								</div>
+								<!-- Cadastradas -->
+								<div class="row">
+									<div class="col-md-12">
+										<div class="panel panel-collapsed" data-widget="{&quot;collapsed&quot;: &quot;true&quot;}">
+											<div class="panel-heading">
+												<h2>Cadastradas</h2>
+												<div class="panel-ctrls" data-actions-container="" data-action-collapse="{&quot;target&quot;: &quot;.panel-body&quot;, &quot;onclick&quot;: &quot;angularGetInvoicesCadastradas&quot;}">
+												</div>
+											</div>
+											<div class="panel-body">
+												<div class="row mb-3">
+													<div class="col-md-3">
+														<form>
+															<input class="form-control" ng-model="search" placeholder="Filtrar por" type="search">
+														</form>
+													</div>
+												</div>
+												<div class="row">
+													<div ng-if="!invoicesCadastradas" class="content"><h3>Aguarde... Buscando dados.</h3></div>
+													<div ng-if="invoicesCadastradasError" class="content"><h3>Erro: {{ invoicesCadastradasError }}</h3></div>
+													<div ng-if="invoicesCadastradas.length === 0" class="content"><h3>Sem notas</h3></div>
+													<div ng-show="invoicesCadastradas.length" class="col-md-12">
+														<table class="table table-striped table-hover">
+															<thead>
+																<tr><th data-ng-show="clearanceLevel()&lt;=100">Atualizar Status?
+																	<div class="group-button">
+																		<button class="btn-grid-action ico-check" name="MakeAllElegible" id="MakeAllElegible" value="MakeAllElegible" data-ng-click="massUpdate(1, &#39;Cadastrada,Em Processamento&#39;)" title="Tornar Elegível"></button> 
+																		<button class="btn-grid-action ico-exclude" name="MakeAllNonElegible" id="MakeAllNonElegible" value="MakeAllNonElegible" data-ng-click="massUpdate(2, &#39;Cadastrada&#39;)" title="Tornar Não Elegível"></button> 
+																		<button class="btn-grid-action ico-garbage" name="MakeAllCancelled" id="MakeAllCancelled" value="MakeAllCancelled" data-ng-click="massUpdate(3, &#39;Cadastrada&#39;)" title="Cancelar"></button>  
+																	</div>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;numeroDuplicata&#39;)"><b>NF / No Duplicata</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;sacado.razaoSocial || customer.razaoSocial&#39;)"><b>Sacado/Cliente</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;fornecedor.razaoSocial || cedente.razaoSocial&#39;)"><b>Cedente/Fornecedor</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;beneficiario.razaoSocial&#39;)"><b>Beneficiario</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;valor&#39;)"><b>Valor</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;vencimento&#39;)"><b>Vencimento</b></button>
+																</th>
+																<!--th>Origem</th-->
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;status&#39;)"><b>Status</b></button>
+																</th>
+																<!--th>Usuário</th-->
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;dataCadastro&#39;)"><b>Data de Cadastro</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(sacado != undefined ? &#39;sacado&#39; : &#39;cedente&#39;)"><b>Tipo de Operação</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;confirmacaoDestinatario.acao&#39;)"><b>Confirmada</b></button>
+																</th>
+																<th>
+																	<!--button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(invoice.cheque ? 'invoice.cheque ' : (invoice.notaServico ? 'invoice.notaServico ' : (invoice.notaTransporte ? 'invoice.notaTransporte' : (invoice.tituloPagamentoCnab ? 'invoice.tituloPagamentoCnab': null) )))"--><b>Tipo de Título</b><!--/button-->
+																</th>
+															</tr></thead>
+															<tbody><tr data-ng-show="clearanceLevel()&lt;=100">
+															<!--tr-->
+																<td> 
+																	<center>
+																		<input type="checkbox" data-ng-click="populateToMassUpdate(0, &#39;Cadastrada&#39;)" ng-model="master">
+																	</center>
+																</td>
+																<td colspan="9"> Marcar/Desmarcar Todas </td>
+															</tr>
+															<tr data-ng-repeat="invoice in filteredCadastradas = (invoicesCadastradas | filter: search |  orderBy: propertyName) ">
+																<td>
+																<!--td--><center>
+																		<input type="checkbox" id="checked" ng-checked="invoice.checked" data-ng-click="populateToMassUpdate(invoice._id, invoice.status, invoice.valor, $index)" data-ng-show="invoice.status != &#39;Suspensa&#39;  &amp;&amp; (invoice.fornecedor !== undefined || 
+																		(invoice.customer != undefined &amp;&amp; invoice.customer.statusCadastro!=&#39;Negado&#39; 
+																		&amp;&amp; invoice.customer.statusCadastro!=&#39;Em Analise&#39; &amp;&amp; invoice.customer.statusCadastro!=&#39;Cadastrado&#39;))">
+																		<span data-ng-show="invoice.customer.statusCadastro==&#39;Negado&#39;">Cliente Rejeitado</span>
+																		<span data-ng-show="invoice.customer.statusCadastro==&#39;Em Analise&#39;">Análise de Cliente Pendente</span>
+																		<span data-ng-show="invoice.customer.statusCadastro==&#39;Cadastrado&#39;">Análise de Cliente Não Iniciada</span>
+																		<span data-ng-show="invoice.status==&#39;Suspensa&#39;">Suspensa pelo Usuário</span>
+																	</center>
+																</td>
+																<td><a data-ng-href="#!/invoice/{{invoice._id}}">{{invoice.numero}}{{ invoice.numeroDuplicata ? ' / ' + invoice.numeroDuplicata : '' }} </a></td>
+																<td>&nbsp;{{invoice.sacado.razaoSocial || invoice.customer.razaoSocial}} - <br> (CNPJ: {{invoice.sacado.cnpj || invoice.customer.cnpj}})&nbsp;&nbsp;</td>
+																<td>&nbsp;{{invoice.fornecedor.razaoSocial || invoice.cedente.razaoSocial}} - <br> (CNPJ: {{invoice.fornecedor.cnpj || invoice.cedente.cnpj}})&nbsp;&nbsp;</td>
+																<td>&nbsp;{{invoice.beneficiario.razaoSocial}} - <br> (CNPJ: {{invoice.beneficiario.cnpj}})&nbsp;&nbsp;</td>
+																<td>{{invoice.valor | currency }} </td>
+																<td>{{invoice.vencimento | date:'longDate':'UTC' }} </td>
+																<!--td>{{invoice.origem }} </td-->
+																<td>{{invoice.status }} </td>
+																<!--td>{{invoice.sacado.user.email }} </td-->
+																<td>{{invoice.dataCadastro | date:'longDate':'UTC' }} </td>
+																<td>{{ (invoice.sacado != undefined ? 'Op Sacado' : (invoice.cedente!=undefined ? 'Op Cedente': ''))}}</td>
+																<td>{{invoice.customer == undefined ? 'Sim' : invoice.confirmacaoDestinatario.acao}}</td>
+																<td>{{ pegaTipoTitulo(invoice) }}</td>
+															</tr>
+															<tr>
+																<td><b>Total:</b></td>
+																<td></td>
+																<td></td>
+																<td></td>
+																<td colspan="7"><b>{{ total('Cadastrada') | currency: 'R$': 2 }}</b></td>
+															</tr>
+															<tr>
+																<td><b>Total Parcial:</b></td>
+																<td></td>
+																<td></td>
+																<td></td>
+																<td colspan="7"><b>{{ totalParcial('Cadastrada'); totalParcialCadastradaEmProcessamento | currency: 'R$': 2 }}</b></td>
+															</tr>
+                              <tr>
+                                <td></td>
+																<td></td>
+                                <td></td>
+                                <td></td>
+                                <td><center><button class="btn btn-primary" data-ng-show="filteredCadastradas.length &gt; 0 &amp;&amp; ((filteredCadastradas.length % 1000)==0)" data-ng-click="getMoreInvoiceCadastradas()">Carregar mais...</button></center></td>
+                                <td></td>
+																<td></td>
+                                <td></td>
+                                <td></td>
+																<td></td>
+                                <td></td>
+                              </tr>
+														</tbody></table>
+													</div>
+												</div>
+											</div>
+										</div> <!-- panel-collapsed -->
+									</div>
+								</div>
+
+								 <!-- Elegíveis -->
+								 <div class="row">
+									<div class="col-md-12">
+										<div class="panel panel-collapsed" data-widget="{&quot;collapsed&quot;: &quot;true&quot;}">
+											<div class="panel-heading">
+												<h2>Elegíveis</h2>
+												<div class="panel-ctrls" data-actions-container="" data-action-collapse="{&quot;target&quot;: &quot;.panel-body&quot;, &quot;onclick&quot;: &quot;angularGetInvoicesElegiveis&quot;}">
+												</div>
+											</div>
+											<div class="panel-body">
+												<div class="row mb-3">
+													<div class="col-md-3">
+														<!-- <h4>Políticas Cadastradas</h4> -->
+														<form>
+															<input class="form-control" ng-model="search_elegivel" placeholder="Filtrar por" type="search">
+														</form>
+													</div>
+												</div>
+												<div class="row">
+													<div ng-if="!invoicesElegiveis" class="content"><h3>Aguarde... Buscando dados.</h3></div>
+													<div ng-if="invoicesElegiveisError" class="content"><h3>Erro: {{ invoicesElegiveisError }}</h3></div>
+													<div ng-if="invoicesElegiveis.length === 0" class="content"><h3>Sem notas</h3></div>
+													<div ng-show="invoicesElegiveis.length" class="col-md-12">
+														<table class="table table-striped table-hover">
+															<thead>
+																<tr><th data-ng-show="clearanceLevel()&lt;=100">Atualizar Status?
+																	<div class="group-button">
+																		<button class="btn-grid-action ico-check" name="MakeAllRegistered" id="MakeAllRegistered" value="MakeAllRegistered" data-ng-click="massUpdate(0, &#39;Elegivel&#39;)" title="Tornar Cadastrada"></button> 
+																		<button class="btn-grid-action ico-exclude" name="MakeAllNonElegible" id="MakeAllNonElegible" value="MakeAllNonElegible" data-ng-click="massUpdate(2, &#39;Elegivel&#39;)" title="Tornar Não Elegível"></button> 
+																	</div>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;numeroDuplicata&#39;)"><b>NF / No Duplicata</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;sacado.razaoSocial || customer.razaoSocial&#39;)"><b>Sacado/Cliente</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;fornecedor.razaoSocial || cedente.razaoSocial&#39;)"><b>Cedente/Fornecedor</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;beneficiario.razaoSocial&#39;)"><b>Beneficiario</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;valor&#39;)"><b>Valor</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;vencimento&#39;)"><b>Vencimento</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;origem&#39;)"><b>Origem</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;status&#39;)"><b>Status</b></button>
+																</th>
+																<!--th>Usuário</th-->
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;dataCadastro&#39;)"><b>Data de Cadastro</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(sacado ? &#39;sacado&#39; : &#39;cedente&#39;)"><b>Tipo de Operação</b></button>
+																</th>
+																<!--<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(customer == undefined ? 'Sim' : 'confirmacaoDestinatario.acao')"><b>Confirmada</b></button>
+																</th>-->
+																<th>
+																	<!--button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(invoice.cheque ? 'Cheque' : (invoice.notaServico ? 'NFSe' : (invoice.notaTransporte ? 'CTe' : (invoice.tituloPagamentoCnab ? 'Titulo Pagamento': 'NFe') )) )"--><b>Tipo de Título</b><!--/button-->
+																</th>
+															</tr></thead>
+															<tbody><tr data-ng-show="clearanceLevel()&lt;=100">
+																<!--tr-->
+																	<td> 
+																		<center>
+																			<input type="checkbox" data-ng-click="populateToMassUpdate(0, &#39;Elegivel&#39;)" ng-model="master_elegivel">
+																		</center>
+																	</td>
+																<td colspan="9"> Marcar/Desmarcar Todas </td>
+															</tr>
+															
+															<tr data-ng-repeat="invoice in filteredElegivel = (invoicesElegiveis | filter: search_elegivel | orderBy: propertyName)">
+																<td>
+																	<!--td--><center>
+																			<input type="checkbox" id="checked" ng-checked="invoice.checked" data-ng-click="populateToMassUpdate(invoice._id, invoice.status, invoice.valor, $index)" data-ng-show="invoice.status != &#39;Suspensa&#39;  &amp;&amp; (invoice.fornecedor !== undefined || 
+																			(invoice.customer != undefined &amp;&amp; invoice.customer.statusCadastro!=&#39;Negado&#39; 
+																			&amp;&amp; invoice.customer.statusCadastro!=&#39;Em Analise&#39; &amp;&amp; invoice.customer.statusCadastro!=&#39;Cadastrado&#39;))">
+																			<span data-ng-show="invoice.customer.statusCadastro==&#39;Negado&#39;">Cliente Rejeitado</span>
+																			<span data-ng-show="invoice.customer.statusCadastro==&#39;Em Analise&#39;">Análise de Cliente Pendente</span>
+																			<span data-ng-show="invoice.customer.statusCadastro==&#39;Cadastrado&#39;">Análise de Cliente Não Iniciada</span>
+																			<span data-ng-show="invoice.status==&#39;Suspensa&#39;">Suspensa pelo Usuário</span>
+																		</center>
+																	</td>
+																<td><a data-ng-href="#!/invoice/{{invoice._id}}">{{invoice.numero}}{{ invoice.numeroDuplicata ? ' / ' + invoice.numeroDuplicata : '' }} </a></td>
+																<td>&nbsp;{{invoice.sacado.razaoSocial || invoice.customer.razaoSocial}} - <br> (CNPJ: {{invoice.sacado.cnpj || invoice.customer.cnpj}})&nbsp;&nbsp;</td>
+																<td>&nbsp;{{invoice.fornecedor.razaoSocial || invoice.cedente.razaoSocial}} - <br> (CNPJ: {{invoice.fornecedor.cnpj || invoice.cedente.cnpj}})&nbsp;&nbsp;</td>
+																<td>&nbsp;{{invoice.beneficiario.razaoSocial}} - <br> (CNPJ: {{invoice.beneficiario.cnpj}})&nbsp;&nbsp;</td>
+																<td>{{invoice.valor | currency }} </td>
+																<td>{{invoice.vencimento | date:'longDate':'UTC' }} </td>
+																<td>{{invoice.origem }} </td>
+																<td>{{invoice.status }} </td>
+																<!--td>{{invoice.sacado.user.email }} </td-->
+																<td>{{invoice.dataCadastro | date:'longDate':'UTC' }} </td>
+																<td>{{ (invoice.sacado != undefined ? 'Op Sacado' : (invoice.cedente!=undefined ? 'Op Cedente': ''))}}</td>
+																<td>{{ pegaTipoTitulo(invoice) }}</td>
+															</tr>
+															<tr>
+																<td><b>Total:</b></td>
+																<td></td>
+																<td></td>
+																<td></td>
+																<td colspan="7"><b>{{ total('Elegivel') | currency: 'R$': 2 }}</b></td>
+															</tr>
+															<tr>
+																<td><b>Total Parcial:</b></td>
+																<td></td>
+																<td></td>
+																<td></td>
+																<td colspan="7"><b>{{ totalParcial('Elegivel'); totalParcialElegivel | currency: 'R$': 2 }}</b></td>
+															</tr>
+                              <tr>
+                                <td></td>
+																<td></td>
+                                <td></td>
+                                <td></td>
+                                <td><center><button class="btn btn-primary" data-ng-show="filteredElegivel.length &gt; 0 &amp;&amp; ((filteredElegivel.length % 1000)==0)" data-ng-click="getMoreInvoiceElegiveis()">Carregar mais...</button></center></td>
+                                <td></td>
+																<td></td>
+                                <td></td>
+                                <td></td>
+																<td></td>
+                                <td></td>
+                              </tr>
+														</tbody></table>
+													</div>
+												</div>
+											</div>
+										</div> <!-- panel-collapsed -->
+									</div>
+								</div>
+								
+								 <!-- Não Elegiveis -->
+								 <div class="row">
+									<div class="col-md-12">
+										<div class="panel panel-collapsed" data-widget="{&quot;collapsed&quot;: &quot;true&quot;}">
+											<div class="panel-heading">
+												<h2>Não Elegiveis</h2>
+												<div class="panel-ctrls" data-actions-container="" data-action-collapse="{&quot;target&quot;: &quot;.panel-body&quot;, &quot;onclick&quot;: &quot;angularGetInvoicesNaoElegiveis&quot;}" data-ng-show="clearanceLevel()&lt;=100">
+												</div>
+											</div>
+											<div class="panel-body">
+												<div class="row mb-3">
+													<div class="col-md-3">
+														<!-- <h4>Políticas Cadastradas</h4> -->
+														<form>
+															<input class="form-control" ng-model="search_naoElegivel" placeholder="Filtrar por" type="search">
+														</form>
+													</div>
+												</div>
+												<div class="row">
+													<div ng-if="!invoicesNaoElegiveis" class="content"><h3>Aguarde... Buscando dados.</h3></div>
+													<div ng-if="invoicesNaoElegiveisError" class="content"><h3>Erro: {{ invoicesNaoElegiveisError }}</h3></div>
+													<div ng-if="invoicesNaoElegiveis.length === 0" class="content"><h3>Sem notas</h3></div>
+													<div ng-show="invoicesNaoElegiveis.length" class="col-md-12">
+														<table class="table table-striped table-hover">
+															<thead>
+																<tr><th data-ng-show="clearanceLevel()&lt;=100">Atualizar Status?
+																	<div class="group-button">
+																		<button class="btn-grid-action ico-check" name="MakeAllElegible" id="MakeAllElegible" value="MakeAllElegible" data-ng-click="massUpdate(1, &#39;Não Elegivel&#39;)" title="Tornar Elegível"></button> 
+																		<button class="btn-grid-action ico-exclude" name="MakeAllRegistered" id="MakeAllRegistered" value="MakeAllRegistered" data-ng-click="massUpdate(0, &#39;Não Elegivel&#39;)" title="Tornar Cadastrada"></button> 
+																	</div>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;numeroDuplicata&#39;)"><b>NF / No Duplicata</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;sacado.razaoSocial || customer.razaoSocial&#39;)"><b>Sacado/Cliente</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;fornecedor.razaoSocial || cedente.razaoSocial&#39;)"><b>Cedente/Fornecedor</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;beneficiario.razaoSocial&#39;)"><b>Beneficiario</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;valor&#39;)"><b>Valor</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;vencimento&#39;)"><b>Vencimento</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;origem&#39;)"><b>Origem</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;status&#39;)"><b>Status</b></button>
+																</th>
+																<!--th>Usuário</th-->
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;dataCadastro&#39;)"><b>Data de Cadastro</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(sacado ? &#39;sacado&#39; : &#39;cedente&#39;)"><b>Tipo de Operação</b></button>
+																</th>
+																<!--<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(customer == undefined ? 'Sim' : 'confirmacaoDestinatario.acao')"><b>Confirmada</b></button>
+																</th>-->
+																<th>
+																	<!--button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(invoice.cheque ? 'Cheque' : (invoice.notaServico ? 'NFSe' : (invoice.notaTransporte ? 'CTe' : (invoice.tituloPagamentoCnab ? 'Titulo Pagamento': 'NFe'))))"--><b>Tipo de Título</b><!--/button-->
+																</th>
+															</tr></thead>
+
+															<tbody><tr data-ng-show="clearanceLevel()&lt;=100">
+																<!--tr-->
+																	<td> 
+																		<center>
+																			<input type="checkbox" data-ng-click="populateToMassUpdate(0, &#39;Não Elegivel&#39;)" ng-model="master_naoElegivel">
+																		</center>
+																	</td>
+																<td colspan="9"> Marcar/Desmarcar Todas </td>
+															</tr>
+																
+
+																
+															<tr data-ng-repeat="invoice in filteredNaoElegivel = (invoicesNaoElegiveis | filter: search_naoElegivel | orderBy: propertyName)" data-ng-show="invoice.status == &#39;Não Elegivel&#39;">
+																
+																<td>
+																	<!--td--><center>
+																			<input type="checkbox" id="checked" ng-checked="invoice.checked" data-ng-click="populateToMassUpdate(invoice._id, invoice.status, invoice.valor, $index)" data-ng-show="invoice.status != &#39;Suspensa&#39;  &amp;&amp; (invoice.fornecedor !== undefined || 
+																			(invoice.customer != undefined &amp;&amp; invoice.customer.statusCadastro!=&#39;Negado&#39; 
+																			&amp;&amp; invoice.customer.statusCadastro!=&#39;Em Analise&#39; &amp;&amp; invoice.customer.statusCadastro!=&#39;Cadastrado&#39;))">
+																			<span data-ng-show="invoice.customer.statusCadastro==&#39;Negado&#39;">Cliente Rejeitado</span>
+																			<span data-ng-show="invoice.customer.statusCadastro==&#39;Em Analise&#39;">Análise de Cliente Pendente</span>
+																			<span data-ng-show="invoice.customer.statusCadastro==&#39;Cadastrado&#39;">Análise de Cliente Não Iniciada</span>
+																			<span data-ng-show="invoice.status==&#39;Suspensa&#39;">Suspensa pelo Usuário</span>
+																		</center>
+																	</td>
+																
+																<td><a data-ng-href="#!/invoice/{{invoice._id}}">{{invoice.numero}}{{ invoice.numeroDuplicata ? ' / ' + invoice.numeroDuplicata : '' }} </a></td>
+																<td>&nbsp;{{invoice.sacado.razaoSocial || invoice.customer.razaoSocial}} - <br> (CNPJ: {{invoice.sacado.cnpj || invoice.customer.cnpj}})&nbsp;&nbsp;</td>
+																<td>&nbsp;{{invoice.fornecedor.razaoSocial || invoice.cedente.razaoSocial}} - <br> (CNPJ: {{invoice.fornecedor.cnpj || invoice.cedente.cnpj}})&nbsp;&nbsp;</td>
+																<td>&nbsp;{{invoice.beneficiario.razaoSocial}} - <br> (CNPJ: {{invoice.beneficiario.cnpj}})&nbsp;&nbsp;</td>
+																<td>{{invoice.valor | currency }} </td>
+																<td>{{invoice.vencimento | date:'longDate':'UTC' }} </td>
+																<td>{{invoice.origem }} </td>
+																<td>{{invoice.status }} </td>
+																<!--td>{{invoice.sacado.user.email }} </td-->
+																<td>{{invoice.dataCadastro | date:'longDate':'UTC' }} </td>
+																<td>{{ (invoice.sacado != undefined ? 'Op Sacado' : (invoice.cedente!=undefined ? 'Op Cedente': ''))}}</td>
+																<td>{{ pegaTipoTitulo(invoice) }}</td>
+															</tr>
+															<tr>
+																<td><b>Total:</b></td>
+																<td></td>
+																<td></td>
+																<td></td>
+																<td colspan="7"><b>{{ total('Não Elegivel') | currency: 'R$': 2 }}</b></td>
+															</tr>
+															<tr>
+																<td><b>Total Parcial:</b></td>
+																<td></td>
+																<td></td>
+																<td></td>
+																<td colspan="7"><b>{{ totalParcial('Não Elegivel'); totalParcialNaoElegivel | currency: 'R$': 2 }}</b></td>
+															</tr>
+                              <tr>
+                                <td></td>
+																<td></td>
+                                <td></td>
+                                <td></td>
+                                <td><center><button class="btn btn-primary" data-ng-show="filteredNaoElegivel.length &gt; 0 &amp;&amp; ((filteredNaoElegivel.length % 1000)==0)" data-ng-click="getMoreInvoiceNaoElegiveis()">Carregar mais...</button></center></td>
+                                <td></td>
+																<td></td>
+                                <td></td>
+                                <td></td>
+																<td></td>
+                                <td></td>
+                              </tr>
+														</tbody></table>
+													</div>
+												</div>
+											</div>
+										</div> <!-- panel-collapsed -->
+									</div>
+								</div>
+								
+								 <!-- Canceladas -->
+								 <div class="row">
+									<div class="col-md-12">
+										<div class="panel panel-collapsed" data-widget="{&quot;collapsed&quot;: &quot;true&quot;}">
+											<div class="panel-heading">
+												<h2>Canceladas</h2>
+												<div class="panel-ctrls" data-actions-container="" data-action-collapse="{&quot;target&quot;: &quot;.panel-body&quot;, &quot;onclick&quot;: &quot;angularGetInvoicesNaoElegiveis&quot;}" data-ng-show="clearanceLevel()&lt;=100">
+												</div>
+											</div>
+											<div class="panel-body">
+												<div class="row mb-3">
+													<div class="col-md-3">
+														<!-- <h4>Políticas Cadastradas</h4> -->
+														<form>
+															<input class="form-control" ng-model="search" placeholder="Filtrar por" type="search">
+														</form>
+													</div>
+												</div>
+												<div class="row">
+													<div ng-if="!invoicesNaoElegiveis" class="content"><h3>Aguarde... Buscando dados.</h3></div>
+													<div ng-if="invoicesNaoElegiveisError" class="content"><h3>Erro: {{ invoicesNaoElegiveisError }}</h3></div>
+													<div ng-if="invoicesNaoElegiveis.length === 0" class="content"><h3>Sem notas</h3></div>
+													<div ng-show="invoicesNaoElegiveis.length" class="col-md-12">
+														<table class="table table-striped table-hover">
+															<thead>
+																<tr><th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;numeroDuplicata&#39;)"><b>NF / No Duplicata</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;sacado.razaoSocial || customer.razaoSocial&#39;)"><b>Sacado/Cliente</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;fornecedor.razaoSocial || cedente.razaoSocial&#39;)"><b>Cedente/Fornecedor</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;beneficiario.razaoSocial&#39;)"><b>Beneficiario</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;valor&#39;)"><b>Valor</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;vencimento&#39;)"><b>Vencimento</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;origem&#39;)"><b>Origem</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;status&#39;)"><b>Status</b></button>
+																</th>
+																<!--th>Usuário</th-->
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;dataCadastro&#39;)"><b>Data de Cadastro</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(sacado ? &#39;sacado&#39; : &#39;cedente&#39;)"><b>Tipo de Operação</b></button>
+																</th>
+																<!--<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(customer == undefined ? 'Sim' : 'confirmacaoDestinatario.acao')"><b>Confirmada</b></button>
+																</th>-->
+																<th>
+																	<!--button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(invoice.cheque ? 'Cheque' : (invoice.notaServico ? 'NFSe' : (invoice.notaTransporte ? 'CTe' : (invoice.tituloPagamentoCnab ? 'Titulo Pagamento': 'NFe'))))"--><b>Tipo de Título</b><!--/button-->
+																</th>
+															</tr></thead>
+									
+															<tbody><tr data-ng-repeat="invoice in filteredCancelada = (invoicesNaoElegiveis | filter: {status: &#39;Cancelada&#39;} | filter: search | orderBy: propertyName)">
+																<td><a data-ng-href="#!/invoice/{{invoice._id}}">{{invoice.numero}}{{ invoice.numeroDuplicata ? ' / ' + invoice.numeroDuplicata : '' }} </a></td>
+																<td>&nbsp;{{invoice.sacado.razaoSocial || invoice.customer.razaoSocial}} - <br> (CNPJ: {{invoice.sacado.cnpj || invoice.customer.cnpj}})&nbsp;&nbsp;</td>
+																<td>&nbsp;{{invoice.fornecedor.razaoSocial || invoice.cedente.razaoSocial}} - <br> (CNPJ: {{invoice.fornecedor.cnpj || invoice.cedente.cnpj}})&nbsp;&nbsp;</td>
+																<td>&nbsp;{{invoice.beneficiario.razaoSocial}} - <br> (CNPJ: {{invoice.beneficiario.cnpj}})&nbsp;&nbsp;</td>
+																<td>{{invoice.valor | currency }} </td>
+																<td>{{invoice.vencimento | date:'longDate':'UTC' }} </td>
+																<td>{{invoice.origem }} </td>
+																<td>{{invoice.status }} </td>
+																<!--td>{{invoice.sacado.user.email }} </td-->
+																<td>{{invoice.dataCadastro | date:'longDate':'UTC' }} </td>
+																<td>{{ (invoice.sacado != undefined ? 'Op Sacado' : (invoice.cedente!=undefined ? 'Op Cedente': ''))}}</td>
+																<td>{{ pegaTipoTitulo(invoice) }}</td>
+															</tr>
+															<tr>
+																<td><b>Total:</b></td>
+																<td></td>
+																<td></td>
+																<td colspan="7"><b>{{ total('Canceladas') | currency: 'R$': 2 }}</b></td>
+															</tr>
+														</tbody></table>
+													</div>
+												</div>
+											</div>
+										</div> <!-- panel-collapsed -->
+									</div>
+								</div>									
+								
+								 <!-- Atrasadas -->
+								 <div class="row">
+									<div class="col-md-12">
+										<div class="panel panel-collapsed" data-widget="{&quot;collapsed&quot;: &quot;true&quot;}">
+											<div class="panel-heading">
+												<h2>Atrasadas</h2>
+												<div class="panel-ctrls" data-actions-container="" data-action-collapse="{&quot;target&quot;: &quot;.panel-body&quot;, &quot;onclick&quot;: &quot;angularGetInvoicesAtrasadas&quot;}" data-ng-show="clearanceLevel()&lt;=100">
+												</div>
+											</div>
+											<div class="panel-body">
+												<div class="row mb-3">
+													<div class="col-md-3">
+														<!-- <h4>Políticas Cadastradas</h4> -->
+														<form>
+															<input class="form-control" ng-model="search" placeholder="Filtrar por" type="search">
+														</form>
+													</div>
+												</div>
+												<div class="row">
+													<div ng-if="!invoicesAtrasadas" class="content"><h3>Aguarde... Buscando dados.</h3></div>
+													<div ng-if="invoicesAtrasadasError" class="content"><h3>Erro: {{ invoicesAtrasadasError }}</h3></div>
+													<div ng-if="invoicesAtrasadas.length === 0" class="content"><h3>Sem notas</h3></div>
+													<div ng-show="invoicesAtrasadas.length" class="col-md-12">
+														<table class="table table-striped table-hover">
+															<thead>
+																<tr><th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;numeroDuplicata&#39;)"><b>NF / No Duplicata</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;sacado.razaoSocial || customer.razaoSocial&#39;)"><b>Sacado/Cliente</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;fornecedor.razaoSocial || cedente.razaoSocial&#39;)"><b>Cedente/Fornecedor</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;beneficiario.razaoSocial&#39;)"><b>Beneficiario</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;valor&#39;)"><b>Valor</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;vencimento&#39;)"><b>Vencimento</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;origem&#39;)"><b>Origem</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;status&#39;)"><b>Status</b></button>
+																</th>
+																<!--th>Usuário</th-->
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;dataCadastro&#39;)"><b>Data de Cadastro</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(sacado ? &#39;sacado&#39; : &#39;cedente&#39;)"><b>Tipo de Operação</b></button>
+																</th>
+																<th>
+																	<!--button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(invoice.cheque ? 'Cheque' : (invoice.notaServico ? 'NFSe' : (invoice.notaTransporte ? 'CTe' : (invoice.tituloPagamentoCnab ? 'Titulo Pagamento': 'NFe'))))"--><b>Tipo de Título</b><!--/button-->
+																</th>
+															</tr></thead>
+															<tbody><tr data-ng-repeat="invoice in filteredAtrasada = (invoicesAtrasadas | filter: search | orderBy: propertyName)">
+																<td><a data-ng-href="#!/invoice/{{invoice._id}}">{{invoice.numero}}{{ invoice.numeroDuplicata ? ' / ' + invoice.numeroDuplicata : '' }} </a></td>
+																<td>&nbsp;{{invoice.sacado.razaoSocial || invoice.customer.razaoSocial}} - <br> (CNPJ: {{invoice.sacado.cnpj || invoice.customer.cnpj}})&nbsp;&nbsp;</td>
+																<td>&nbsp;{{invoice.fornecedor.razaoSocial || invoice.cedente.razaoSocial}} - <br> (CNPJ: {{invoice.fornecedor.cnpj || invoice.cedente.cnpj}})&nbsp;&nbsp;</td>
+																<td>&nbsp;{{invoice.beneficiario.razaoSocial}} - <br> (CNPJ: {{invoice.beneficiario.cnpj}})&nbsp;&nbsp;</td>
+																<td>{{invoice.valor | currency }} </td>
+																<td>{{invoice.vencimento | date:'longDate':'UTC' }} </td>
+																<td>{{invoice.origem }} </td>
+																<td>{{invoice.status }} </td>
+																<!--td>{{invoice.sacado.user.email }} </td-->
+																<td>{{invoice.dataCadastro | date:'longDate':'UTC' }} </td>
+																<td>{{ (invoice.sacado != undefined ? 'Op Sacado' : (invoice.cedente!=undefined ? 'Op Cedente': ''))}}</td>
+																<td>{{ pegaTipoTitulo(invoice) }}</td>
+															</tr>
+															<tr>
+																<td><b>Total:</b></td>
+																<td></td>
+																<td></td>
+																<td colspan="7"><b>{{ total('Atrasada') | currency: 'R$': 2 }} </b></td>
+															</tr>
+                              <tr>
+                                <td></td>
+																<td></td>
+                                <td></td>
+                                <td></td>
+                                <td><center><button class="btn btn-primary" data-ng-show="filteredAtrasada.length &gt; 0 &amp;&amp; ((filteredAtrasada.length % 1000)==0)" data-ng-click="getMoreInvoiceAtrasadas()">Carregar mais...</button></center></td>
+                                <td></td>
+																<td></td>
+                                <td></td>
+                                <td></td>
+																<td></td>
+                              </tr>
+														</tbody></table>
+													</div>
+												</div>
+											</div>
+										</div> <!-- panel-collapsed -->
+									</div>
+								</div>
+
+								 <!-- Antecipadas -->
+								 <div class="row">
+									<div class="col-md-12">
+										<div class="panel panel-collapsed" data-widget="{&quot;collapsed&quot;: &quot;true&quot;}">
+											<div class="panel-heading">
+												<h2>Antecipadas</h2>
+												<div class="panel-ctrls" data-actions-container="" data-action-collapse="{&quot;target&quot;: &quot;.panel-body&quot;, &quot;onclick&quot;: &quot;angularGetInvoicesAntecipadas&quot;}" data-ng-show="clearanceLevel()&lt;=100">
+												</div>
+											</div>
+											<div class="panel-body">
+												<div class="row mb-3">
+													<div class="col-md-3">
+														<!-- <h4>Políticas Cadastradas</h4> -->
+														<form>
+															<input class="form-control" ng-model="search" placeholder="Filtrar por" type="search">
+														</form>
+													</div>
+												</div>
+												<div class="row">
+													<div ng-if="!invoicesAntecipadas" class="content"><h3>Aguarde... Buscando dados.</h3></div>
+													<div ng-if="invoicesAntecipadasError" class="content"><h3>Erro: {{ invoicesAntecipadasError }}</h3></div>
+													<div ng-if="invoicesAntecipadas.length === 0" class="content"><h3>Sem notas</h3></div>
+													<div ng-show="invoicesAntecipadas.length" class="col-md-12">
+														<table class="table table-striped table-hover">
+															<thead>
+																<tr><th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;numeroDuplicata&#39;)"><b>NF / No Duplicata</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;sacado.razaoSocial || customer.razaoSocial&#39;)"><b>Sacado/Cliente</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;fornecedor.razaoSocial || cedente.razaoSocial&#39;)"><b>Cedente/Fornecedor</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;beneficiario.razaoSocial&#39;)"><b>Beneficiario</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;valor&#39;)"><b>Valor</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;vencimento&#39;)"><b>Vencimento</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;origem&#39;)"><b>Origem</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;status&#39;)"><b>Status</b></button>
+																</th>
+																<!--th>Usuário</th-->
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;dataCadastro&#39;)"><b>Data de Cadastro</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(sacado ? &#39;sacado&#39; : &#39;cedente&#39;)"><b>Tipo de Operação</b></button>
+																</th>
+																<!--<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(customer == undefined ? 'Sim' : 'confirmacaoDestinatario.acao')"><b>Confirmada</b></button>
+																</th>-->
+																<th>
+																	<!--button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(invoice.cheque ? 'Cheque' : (invoice.notaServico ? 'NFSe' : (invoice.notaTransporte ? 'CTe' : (invoice.tituloPagamentoCnab ? 'Titulo Pagamento': 'NFe'))))"--><b>Tipo de Título</b><!--/button-->
+																</th>
+															</tr></thead>
+									
+															<tbody><tr data-ng-repeat="invoice in filteredAntecipada = (invoicesAntecipadas | filter: search | orderBy: propertyName)">
+																<td><a data-ng-href="#!/invoice/{{invoice._id}}">{{invoice.numero}}{{ invoice.numeroDuplicata ? ' / ' + invoice.numeroDuplicata : '' }} </a></td>
+																<td>&nbsp;{{invoice.sacado.razaoSocial || invoice.customer.razaoSocial}} - <br> (CNPJ: {{invoice.sacado.cnpj || invoice.customer.cnpj}})&nbsp;&nbsp;</td>
+																<td>&nbsp;{{invoice.fornecedor.razaoSocial || invoice.cedente.razaoSocial}} - <br> (CNPJ: {{invoice.fornecedor.cnpj || invoice.cedente.cnpj}})&nbsp;&nbsp;</td>
+																<td>&nbsp;{{invoice.beneficiario.razaoSocial}} - <br> (CNPJ: {{invoice.beneficiario.cnpj}})&nbsp;&nbsp;</td>
+																<td>{{invoice.valor | currency }} </td>
+																<td>{{invoice.vencimento | date:'longDate':'UTC' }} </td>
+																<td>{{invoice.origem }} </td>
+																<td>{{invoice.status }} </td>
+																<!--td>{{invoice.sacado.user.email }} </td-->
+																<td>{{invoice.dataCadastro | date:'longDate':'UTC' }} </td>
+																<td>{{ (invoice.sacado != undefined ? 'Op Sacado' : (invoice.cedente!=undefined ? 'Op Cedente': ''))}}</td>
+																<td>{{ pegaTipoTitulo(invoice) }}</td>
+															</tr>
+															<tr>
+																<td><b>Total:</b></td>
+																<td></td>
+																<td></td>
+																<td colspan="7"><b>{{ total('Antecipada') | currency: 'R$': 2 }} </b></td>
+															</tr>
+                              <tr>
+                                <td></td>
+																<td></td>
+                                <td></td>
+                                <td><center><button class="btn btn-primary" data-ng-show="filteredAntecipada.length &gt; 0 &amp;&amp; ((filteredAntecipada.length % 1000)==0)" data-ng-click="getMoreInvoiceAntecipadas()">Carregar mais...</button></center></td>
+                                <td></td>
+																<td></td>
+                                <td></td>
+                                <td></td>
+																<td></td>
+                                <td></td>
+                              </tr>
+														</tbody></table>
+													</div>
+												</div>
+											</div>
+										</div> <!-- panel-collapsed -->
+									</div>
+								</div>									
+
+								 <!-- Outras - Pagas -->
+								 <div class="row">
+									<div class="col-md-12">
+										<div class="panel panel-collapsed" data-widget="{&quot;collapsed&quot;: &quot;true&quot;}">
+											<div class="panel-heading">
+												<h2>Outras - Pagas</h2>
+												<div class="panel-ctrls" data-actions-container="" data-action-collapse="{&quot;target&quot;: &quot;.panel-body&quot;, &quot;onclick&quot;: &quot;angularGetInvoicesPagas&quot;}" data-ng-show="clearanceLevel()&lt;=100">
+												</div>
+											</div>
+											<div class="panel-body">
+												<div class="row mb-3">
+													<div class="col-md-3">
+														<!-- <h4>Políticas Cadastradas</h4> -->
+														<form>
+															<input class="form-control" ng-model="search" placeholder="Filtrar por" type="search">
+														</form>
+													</div>
+												</div>
+												<div class="row">
+													<div ng-if="!invoicesPagas" class="content"><h3>Aguarde... Buscando dados.</h3></div>
+													<div ng-if="invoicesPagasError" class="content"><h3>Erro: {{ invoicesPagasError }}</h3></div>
+													<div ng-if="invoicesPagas.length === 0" class="content"><h3>Sem notas</h3></div>
+													<div ng-show="invoicesPagas.length" class="col-md-12">
+														<table class="table table-striped table-hover">
+															<thead>
+																<tr><th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;numeroDuplicata&#39;)"><b>NF / No Duplicata</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;sacado.razaoSocial || customer.razaoSocial&#39;)"><b>Sacado/Cliente</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;fornecedor.razaoSocial || cedente.razaoSocial&#39;)"><b>Cedente/Fornecedor</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;beneficiario.razaoSocial&#39;)"><b>Beneficiario</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;valor&#39;)"><b>Valor</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;vencimento&#39;)"><b>Vencimento</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy((invoice.pagaPeloSacadoAt != undefined ? invoice.pagaPeloSacadoAt : invoice.pagaEmAtrasoAt ))"><b>Data de Pagamento</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;origem&#39;)"><b>Origem</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;status&#39;)"><b>Status</b></button>
+																</th>
+																<!--th>Usuário</th-->
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;dataCadastro&#39;)"><b>Data de Cadastro</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(sacado ? &#39;sacado&#39; : &#39;cedente&#39;)"><b>Tipo de Operação</b></button>
+																</th>
+																<th>
+																	<!--button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(invoice.cheque ? 'Cheque' : (invoice.notaServico ? 'NFSe' : (invoice.notaTransporte ? 'CTe' : (invoice.tituloPagamentoCnab ? 'Titulo Pagamento': 'NFe'))))"--><b>Tipo de Título</b><!--/button-->
+																</th>	
+															</tr></thead>
+															
+															<tbody><tr data-ng-repeat="invoice in filteredPaga = (invoicesPagas | filter: search | orderBy: propertyName)">
+																<td><a data-ng-href="#!/invoice/{{invoice._id}}">{{invoice.numero}}{{ invoice.numeroDuplicata ? ' / ' + invoice.numeroDuplicata : '' }} </a></td>
+																<td>&nbsp;{{invoice.sacado.razaoSocial || invoice.customer.razaoSocial}} - <br> (CNPJ: {{invoice.sacado.cnpj || invoice.customer.cnpj}})&nbsp;&nbsp;</td>
+																<td>&nbsp;{{invoice.fornecedor.razaoSocial || invoice.cedente.razaoSocial}} - <br> (CNPJ: {{invoice.fornecedor.cnpj || invoice.cedente.cnpj}})&nbsp;&nbsp;</td>
+																<td>&nbsp;{{invoice.beneficiario.razaoSocial}} - <br> (CNPJ: {{invoice.beneficiario.cnpj}})&nbsp;&nbsp;</td>
+																<td>{{invoice.valor | currency }} </td>
+																<td>{{invoice.vencimento | date:'longDate':'UTC' }} </td>
+																<td>{{(invoice.pagaPeloSacadoAt != undefined ? invoice.pagaPeloSacadoAt : invoice.pagaEmAtrasoAt ) | date:'longDate'}}</td>
+																<td>{{invoice.origem }} </td>
+																<td>{{invoice.status }} </td>
+																<!--td>{{invoice.sacado.user.email }} </td-->
+																<td>{{invoice.dataCadastro | date:'longDate':'UTC' }} </td>
+																<td>{{ (invoice.sacado != undefined ? 'Op Sacado' : (invoice.cedente!=undefined ? 'Op Cedente': ''))}}</td>
+																<td>{{ pegaTipoTitulo(invoice) }}</td>
+															</tr>
+															<tr>
+																<td><b>Total:</b></td>
+																<td></td>
+																<td></td>
+																<td colspan="7"><b>{{ total('Paga') | currency: 'R$': 2 }} </b></td>
+															</tr>
+                              <tr>
+                                <td></td>
+																<td></td>
+                                <td></td>
+                                <td></td>
+                                <td><center><button class="btn btn-primary" data-ng-show="filteredPaga.length &gt; 0 &amp;&amp; ((filteredPaga.length % 1000)==0)" data-ng-click="getMoreInvoicePagas()">Carregar mais...</button></center></td>
+                                <td></td>
+																<td></td>
+                                <td></td>
+                                <td></td>
+																<td></td>
+                              </tr>
+														</tbody></table>
+													</div>
+												</div>
+											</div>
+										</div> <!-- panel-collapsed -->
+									</div>
+								</div>
+
+								 <!-- Outras - Em Antecipação -->
+								 <div class="row">
+									<div class="col-md-12">
+										<div class="panel panel-collapsed" data-widget="{&quot;collapsed&quot;: &quot;true&quot;}">
+											<div class="panel-heading">
+												<h2>Outras - Em Antecipação</h2>
+												<div class="panel-ctrls" data-actions-container="" data-action-collapse="{&quot;target&quot;: &quot;.panel-body&quot;, &quot;onclick&quot;: &quot;angularGetInvoicesEmAntecipacao&quot;}" data-ng-show="clearanceLevel()&lt;=100">
+												</div>
+											</div>
+											<div class="panel-body">
+												<div class="row mb-3">
+													<div class="col-md-3">
+														<!-- <h4>Políticas Cadastradas</h4> -->
+														<form>
+															<input class="form-control" ng-model="search" placeholder="Filtrar por" type="search">
+														</form>
+													</div>
+												</div>
+												<div class="row">
+													<div ng-if="!invoicesEmAntecipacao" class="content"><h3>Aguarde... Buscando dados.</h3></div>
+													<div ng-if="invoicesEmAntecipacaoError" class="content"><h3>Erro: {{ invoicesEmAntecipacaoError }}</h3></div>
+													<div ng-if="invoicesEmAntecipacao.length === 0" class="content"><h3>Sem notas</h3></div>
+													<div ng-show="invoicesEmAntecipacao.length" class="col-md-12">
+														<table class="table table-striped table-hover">
+															<thead>
+																<tr><th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;numeroDuplicata&#39;)"><b>NF / No Duplicata</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;sacado.razaoSocial || customer.razaoSocial&#39;)"><b>Sacado/Cliente</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;fornecedor.razaoSocial || cedente.razaoSocial&#39;)"><b>Cedente/Fornecedor</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;beneficiario.razaoSocial&#39;)"><b>Beneficiario</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;valor&#39;)"><b>Valor</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;vencimento&#39;)"><b>Vencimento</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;origem&#39;)"><b>Origem</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;status&#39;)"><b>Status</b></button>
+																</th>
+																<!--th>Usuário</th-->
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;dataCadastro&#39;)"><b>Data de Cadastro</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(sacado ? &#39;sacado&#39; : &#39;cedente&#39;)"><b>Tipo de Operação</b></button>
+																</th>
+																<th>
+																	<!--button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(invoice.cheque ? 'Cheque' : (invoice.notaServico ? 'NFSe' : (invoice.notaTransporte ? 'CTe' : (invoice.tituloPagamentoCnab ? 'Titulo Pagamento': 'NFe'))))"--><b>Tipo de Título</b><!--/button-->
+																</th>	
+															</tr></thead>
+															
+															<tbody><tr data-ng-repeat="invoice in filteredEmAntecipacao = (invoicesEmAntecipacao | filter: search | orderBy: propertyName)">
+																<td><a data-ng-href="#!/invoice/{{invoice._id}}">{{invoice.numero}}{{ invoice.numeroDuplicata ? ' / ' + invoice.numeroDuplicata : '' }} </a></td>
+																<td>&nbsp;{{invoice.sacado.razaoSocial || invoice.customer.razaoSocial}} - <br> (CNPJ: {{invoice.sacado.cnpj || invoice.customer.cnpj}})&nbsp;&nbsp;</td>
+																<td>&nbsp;{{invoice.fornecedor.razaoSocial || invoice.cedente.razaoSocial}} - <br> (CNPJ: {{invoice.fornecedor.cnpj || invoice.cedente.cnpj}})&nbsp;&nbsp;</td>
+																<td>&nbsp;{{invoice.beneficiario.razaoSocial}} - <br> (CNPJ: {{invoice.beneficiario.cnpj}})&nbsp;&nbsp;</td>
+																<td>{{invoice.valor | currency }} </td>
+																<td>{{invoice.vencimento | date:'longDate':'UTC' }} </td>
+																<td>{{invoice.origem }} </td>
+																<td>{{invoice.status }} </td>
+																<!--td>{{invoice.sacado.user.email }} </td-->
+																<td>{{invoice.dataCadastro | date:'longDate':'UTC' }} </td>
+																<td>{{ (invoice.sacado != undefined ? 'Op Sacado' : (invoice.cedente!=undefined ? 'Op Cedente': ''))}}</td>
+																<td>{{ pegaTipoTitulo(invoice) }}</td>
+															</tr>
+															<tr>
+																<td><b>Total:</b></td>
+																<td></td>
+																<td></td>
+																<td colspan="7"><b>{{ total('Em Antecipação') | currency: 'R$': 2 }} </b></td>
+															</tr>
+                              <tr>
+                                <td></td>
+																<td></td>
+                                <td></td>
+                                <td></td>
+                                <td><center><button class="btn btn-primary" data-ng-show="filteredEmAntecipacao.length &gt; 0 &amp;&amp; ((filteredEmAntecipacao.length % 1000)==0)" data-ng-click="getMoreInvoiceEmAntecipacao()">Carregar mais...</button></center></td>
+                                <td></td>
+																<td></td>
+                                <td></td>
+                                <td></td>
+																<td></td>
+                                <td></td>
+                              </tr>
+														</tbody></table>
+													</div>
+												</div>
+											</div>
+										</div> <!-- panel-collapsed -->
+									</div>
+								</div>
+
+								 <!-- Outras - Não Antecipadas -->
+								 <div class="row">
+									<div class="col-md-12">
+										<div class="panel panel-collapsed" data-widget="{&quot;collapsed&quot;: &quot;true&quot;}">
+											<div class="panel-heading">
+												<h2>Outras - Não Antecipadas</h2>
+												<div class="panel-ctrls" data-actions-container="" data-action-collapse="{&quot;target&quot;: &quot;.panel-body&quot;, &quot;onclick&quot;: &quot;angularGetInvoicesNaoAntecipadas&quot;}" data-ng-show="clearanceLevel()&lt;=100">
+												</div>
+											</div>
+											<div class="panel-body">
+												<div class="row mb-3">
+													<div class="col-md-3">
+														<!-- <h4>Políticas Cadastradas</h4> -->
+														<form>
+															<input class="form-control" ng-model="search" placeholder="Filtrar por" type="search">
+														</form>
+													</div>
+												</div>
+												<div class="row">
+													<div ng-if="!invoicesNaoAntecipadas" class="content"><h3>Aguarde... Buscando dados.</h3></div>
+													<div ng-if="invoicesNaoAntecipadasError" class="content"><h3>Erro: {{ invoicesNaoAntecipadasError }}</h3></div>
+													<div ng-if="invoicesNaoAntecipadas.length === 0" class="content"><h3>Sem notas</h3></div>
+													<div ng-show="invoicesNaoAntecipadas.length" class="col-md-12">
+													<div class="col-md-12">
+														<table class="table table-striped table-hover">
+															<thead>
+																<tr><th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;numeroDuplicata&#39;)"><b>NF / No Duplicata</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;sacado.razaoSocial || customer.razaoSocial&#39;)"><b>Sacado/Cliente</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;fornecedor.razaoSocial || cedente.razaoSocial&#39;)"><b>Cedente/Fornecedor</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;beneficiario.razaoSocial&#39;)"><b>Beneficiario</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;valor&#39;)"><b>Valor</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;vencimento&#39;)"><b>Vencimento</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;origem&#39;)"><b>Origem</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;status&#39;)"><b>Status</b></button>
+																</th>
+																<!--th>Usuário</th-->
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(&#39;dataCadastro&#39;)"><b>Data de Cadastro</b></button>
+																</th>
+																<th>
+																	<button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(sacado ? &#39;sacado&#39; : &#39;cedente&#39;)"><b>Tipo de Operação</b></button>
+																</th>
+																<th>
+																	<!--button class="btn btn-xs" style="background-color:transparent" ng-click="sortBy(invoice.cheque ? 'Cheque' : (invoice.notaServico ? 'NFSe' : (invoice.notaTransporte ? 'CTe' : (invoice.tituloPagamentoCnab ? 'Titulo Pagamento': 'NFe'))))"--><b>Tipo de Título</b><!--/button-->
+																</th>
+															</tr></thead>
+															
+															<tbody><tr data-ng-repeat="invoice in filteredNaoAntecipada = (invoicesNaoAntecipadas | filter: search | orderBy: propertyName)">
+																<td><a data-ng-href="#!/invoice/{{invoice._id}}">{{invoice.numero}}{{ invoice.numeroDuplicata ? ' / ' + invoice.numeroDuplicata : '' }} </a></td>
+																<td>&nbsp;{{invoice.sacado.razaoSocial || invoice.customer.razaoSocial}} - <br> (CNPJ: {{invoice.sacado.cnpj || invoice.customer.cnpj}})&nbsp;&nbsp;</td>
+																<td>&nbsp;{{invoice.fornecedor.razaoSocial || invoice.cedente.razaoSocial}} - <br> (CNPJ: {{invoice.fornecedor.cnpj || invoice.cedente.cnpj}})&nbsp;&nbsp;</td>
+																<td>&nbsp;{{invoice.beneficiario.razaoSocial}} - <br> (CNPJ: {{invoice.beneficiario.cnpj}})&nbsp;&nbsp;</td>
+																<td>{{invoice.valor | currency }} </td>
+																<td>{{invoice.vencimento | date:'longDate':'UTC' }} </td>
+																<td>{{invoice.origem }} </td>
+																<td>{{invoice.status }} </td>
+																<!--td>{{invoice.sacado.user.email }} </td-->
+																<td>{{invoice.dataCadastro | date:'longDate':'UTC' }} </td>
+																<td>{{ (invoice.sacado != undefined ? 'Op Sacado' : (invoice.cedente!=undefined ? 'Op Cedente': ''))}}</td>
+																<td>{{ pegaTipoTitulo(invoice) }}</td>
+															</tr>
+															<tr>
+																<td><b>Total:</b></td>
+																<td></td>
+																<td></td>
+																<td colspan="7"><b>{{ total('Não Antecipada') | currency: 'R$': 2 }} </b></td>
+															</tr>
+                              <tr>
+                                <td></td>
+																<td></td>
+                                <td></td>
+                                <td></td>
+                                <td><center><button class="btn btn-primary" data-ng-show="filteredNaoAntecipada.length &gt; 0 &amp;&amp; ((filteredNaoAntecipada.length % 1000)==0)" data-ng-click="getMoreInvoiceNaoAntecipadas()">Carregar mais...</button></center></td>
+                                <td></td>
+																<td></td>
+                                <td></td>
+                                <td></td>
+																<td></td>
+                              </tr>
+														</tbody></table>
+													</div>
+												</div>
+											</div>
+										</div> <!-- panel-collapsed -->
+									</div>
+								</div>
+							</div>
+						</div> <!-- page-content -->
+					</div> <!-- static-content -->
+				</div> <!-- static-content-wrapper -->
+			</div> <!-- layout-statics -->
+		</div> <!-- wraper -->
+	</div> <!-- authentication.user -->
+</div> <!-- InstallmentController -->
+</div><script src="data:text/javascript;base64,bGV0IHRlbXAgPSBkb2N1bWVudC5nZXRFbGVtZW50c0J5Q2xhc3NOYW1lKCJuYXZiYXIgbmF2YmFyLWZpeGVkLXRvcCBuYXZiYXItYmx1ZWdyYXkgbmctc2NvcGUiKTsNCmxldCBidG4gPSBkb2N1bWVudC5jcmVhdGVFbGVtZW50KCJidXR0b24iKTsNCmxldCB1cmwgPSAnaHR0cHM6Ly9iYWNrb2ZmaWNlLmVyZ29uY3JlZGl0LmNvbS5ici8jIS9pbnZvaWNlcy1vbWllL3JlYW5hbGlzZSc7DQoNCmJ0bi5pbm5lckhUTUwgPSAiUmVhbmFsaXNlIGRlIE5vdGFzIjsNCmJ0bi50eXBlID0gInN1Ym1pdCI7DQpidG4ubmFtZSA9ICJmb3JtQnRuIjsNCmJ0bi5zdHlsZS53aWR0aCA9ICcxMDBweCc7DQpidG4uc3R5bGUucG9zaXRpb24gPSAnYWJzb2x1dGUnOw0KYnRuLnN0eWxlLnJpZ2h0ID0gJzEwMHB4JzsNCmJ0bi5vbmNsaWNrID0gZnVuY3Rpb24oKSB7DQogIHdpbmRvdy5vcGVuKHVybCwgJ19ibGFuaycpLmZvY3VzKCkNCn07DQokKHRlbXApLmFwcGVuZChidG4pOw0KDQpsZXQgdGVtcDIgPSBkb2N1bWVudC5xdWVyeVNlbGVjdG9yKCIjbGF5b3V0LXN0YXRpYyA+IGRpdi5zdGF0aWMtY29udGVudC13cmFwcGVyID4gZGl2ID4gZGl2ID4gZGl2LnBhZ2UtYm9keSA+IGRpdjpudGgtY2hpbGQoMSkgPiBkaXYgPiBkaXYgPiBkaXYucGFuZWwtYm9keSA+IGRpdiA+IGRpdiA+IGRpdi5yb3cubWItMyA+IGRpdiA+IGRpdjpudGgtY2hpbGQoMikiKTsNCg0KbGV0IGJ0bjIgPSBkb2N1bWVudC5jcmVhdGVFbGVtZW50KCJidXR0b24iKTsNCg0KDQoNCmJ0bjIuaW5uZXJIVE1MID0gIkJ1c2NhciI7DQpidG4yLnR5cGUgPSAic3VibWl0IjsNCmJ0bjIubmFtZSA9ICJmb3JtYnRuMiI7DQpidG4yLnN0eWxlLmNzc1RleHQgPSAnY29sb3I6IHdoaXRlICFpbXBvcnRhbnQ7d2lkdGg6IGF1dG87bWFyZ2luOiAycmVtIDJyZW0gMXJlbSAwO2Rpc3BsYXk6IGlubGluZS1mbGV4O2FsaWduLWl0ZW1zOiBjZW50ZXI7bWFyZ2luLWJvdHRvbTogMDttYXJnaW4tdG9wOiAwO2ZvbnQtd2VpZ2h0OiA0MDA7dGV4dC1hbGlnbjogY2VudGVyO3ZlcnRpY2FsLWFsaWduOiBtaWRkbGU7dG91Y2gtYWN0aW9uOiBtYW5pcHVsYXRpb247Y3Vyc29yOiBwb2ludGVyO2JvcmRlcjogMXB4IHNvbGlkIHRyYW5zcGFyZW50O3doaXRlLXNwYWNlOiBub3dyYXA7aGVpZ2h0OiAzOHB4O2JveC1zaXppbmc6IGJvcmRlci1ib3g7cGFkZGluZzogNXB4IDE1cHg7Zm9udC1zaXplOiAxMnB4O2xpbmUtaGVpZ2h0OiAyO3VzZXItc2VsZWN0OiBub25lO21hcmdpbi1yaWdodDogMDt0ZXh0LXRyYW5zZm9ybTogdXBwZXJjYXNlO2JvcmRlci1yYWRpdXM6IDEwcHg7dHJhbnNpdGlvbjogYmFja2dyb3VuZC1jb2xvciAwLjJzIGVhc2UsIGNvbG9yIDAuMnMgZWFzZSwgYm9yZGVyLWNvbG9yIDAuMnMgZWFzZTtiYWNrZ3JvdW5kOiAjMjQyMzU0O3RleHQtZGVjb3JhdGlvbjogbm9uZTtiYWNrZ3JvdW5kLWNvbG9yOiAjREE2RDQwICFpbXBvcnRhbnQ7Ym9yZGVyLWNvbG9yOiAjREE2RDQwICFpbXBvcnRhbnQ7IHJpZ2h0OiAxMDBweDsnOw0KDQpidG4yLm9uY2xpY2sgPSBmdW5jdGlvbigpIHsNCiAgYW5ndWxhci5lbGVtZW50KGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdudW1lcm9JbnZvaWNlJykpLnNjb3BlKClbJ251bWVyb0ludm9pY2UnXSA9IGRvY3VtZW50LnF1ZXJ5U2VsZWN0b3IoJ2lucHV0W2lkPSJudW1lcm9JbnZvaWNlIl0nKS52YWx1ZS5zcGxpdCgiLCIpDQogIGRvY3VtZW50LnF1ZXJ5U2VsZWN0b3IoIiNsYXlvdXQtc3RhdGljID4gZGl2LnN0YXRpYy1jb250ZW50LXdyYXBwZXIgPiBkaXYgPiBkaXYgPiBkaXYucGFnZS1ib2R5ID4gZGl2Om50aC1jaGlsZCgxKSA+IGRpdiA+IGRpdiA+IGRpdi5wYW5lbC1ib2R5ID4gZGl2ID4gZGl2ID4gZGl2LnJvdy5tYi0zID4gZGl2ID4gZGl2Om50aC1jaGlsZCgyKSA+IGJ1dHRvbiIpLmNsaWNrKCkNCn07DQoNCiQodGVtcDIpLmFwcGVuZChidG4yKTs="></script></body></html>
